@@ -7,8 +7,8 @@ const JWT = require("jsonwebtoken")
 const {check,validationResult} = require("express-validator");
  const bcrypt =  require('bcrypt')
  require("dotenv").config()
- const ACCOUNT_SID = 'AC40b4dfec1d98e43818334c2736ccd945';
-const AUTH_TOKEN = '8dcb5f88917c21ea71fcf121f2e9573a';
+ //const ACCOUNT_SID =;
+//const AUTH_TOKEN = ;
   const client = twilio(ACCOUNT_SID, AUTH_TOKEN);
 signup=async (req,res,next) => {
     try {

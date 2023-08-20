@@ -1,6 +1,20 @@
 const Product = require('../models/product');
+//const  createIndex = require('../models/search');
 const  httpResponse = require("../helpers/helper")
 const CustomError = require("../errors");
+//let elasticsearch = require('elasticsearch');
+const { Client} = require('@elastic/elasticsearch');
+const {elastic_name, elastic_pass,localhost} = process.env;
+const client = new Client({
+  node:localhost,//replace localhost
+  auth: {
+    username: elastic_name, // Replace with your Elasticsearch username
+    password:  elastic_pass, // Replace with your Elasticsearch password
+  },
+});
+// require('../models/search')(elasticClient);
+// const indexName = 'reddy';
+
 addproduct=async(req,res,next)=>{
     const data = req.body;
     id=req.product
@@ -202,7 +216,7 @@ FilterProducts=async(req, res, next)=>{
   const mi=parseFloat(req.query.min)
   const ma=parseFloat(req.query.max)
   const rating = parseFloat(req.query.ratings)
-  console.log(rating)
+  //console.log(rating)
   try{
     const products = await Product.aggregate([
       {
@@ -216,21 +230,143 @@ FilterProducts=async(req, res, next)=>{
     return res.status(500).json(httpResponse(false, "filter failed", err.message));
   }
 }
-SearchProduct=async(req, res, next)=>{
-  const search=req.query.search;
+
+SearchProduct = async (req, res, next) => {
+  const search = req.query.search;
+  const searchArray = search.split(/\s+/); // Split the search text into an array of words
+
+  const searchQueries = searchArray.map(term => ({
+    $or: [
+      { name: { $regex: term, $options: "i" } },
+      { description: { $regex: term, $options: "i" } }
+    ]
+  }));
+
   try {
-    const products = await Product.find({
-      $or: [
-        { name: { $regex: search, $options: "i" } },
-        { description: { $regex: search, $options: "i" } }
-      ]
-    });
-    if (!products) {
-      return next(new CustomError.NotFoundError("product not found"))
+    const products = await Product.find({ $and: searchQueries });
+
+    if (products.length === 0) {
+      return res.status(404).json(httpResponse(false, "Products not found"));
     }
+
     return res.status(200).json(httpResponse(true, "Product search successful", products));
   } catch (err) {
     return res.status(500).json(httpResponse(false, "Product search failed", err.message));
   }
+};
+//const indexName = 'products'
+// const indexName = 'rai';
+// const aliasName = 'product_search'; // Define an alias name
+
+// const createIndex = async () => {
+//   await client.indices.create({
+//     index: indexName,
+//     body: {
+//       mappings: {
+//         properties: {
+//           name: { type: 'text' },
+//           description: { type: 'text' },
+//         },
+//       },
+//     },
+//   });
+
+//   // Associate the alias with the index
+//   await client.indices.putAlias({
+//     index: indexName,
+//     name: aliasName,
+//   });
+// };
+
+// createIndex();
+const indexName = 'raq';
+const aliasName = 'product_search';
+elastic=async (req, res) => {
+  try {
+//     const indexName = 'ral';
+// const aliasName = 'product_searc'; // Define an alias name
+
+const createIndex = async () => {
+  let indexex = false;
+  await  client.indices.exists({ index: indexName })
+  .then(indexExists => {
+    if (indexExists) {
+      indexex = true;
+    }
+  })
+  .catch(error => {
+    console.error('Error checking index existence:', error);
+  });
+
+  if(indexex){
+    client.indices.putMapping({
+      index: indexName,
+      body: {
+        properties: {
+          name: { type: 'text' },
+          description: { type: 'text' },
+        },
+      },
+    })
+  }else{
+    client.indices.create({
+      index: indexName,
+      body:{
+        mappings: {
+          properties: {
+            name: { type: 'text' },
+            description: { type: 'text' },
+          },
+        },
+      },
+    });
+  }
+  
+
+  // Associate the alias with the index
+  await client.indices.putAlias({
+    index: indexName,
+    name: aliasName,
+  });
+};
+createIndex();
+  //createIndex("elas");
+  const products = await Product.find()
+    const bulkBody = [];
+
+    // Create bulk index commands for each product
+    products.forEach(product => {
+      bulkBody.push(
+        { index: { _index: aliasName, _id: product._id } },
+        { name: product.name, description: product.description }
+      );
+    });
+
+    // Use the Elasticsearch client's bulk API to index data
+    const  body = await client.bulk({ refresh: true, body: bulkBody });
+
+  const result = await client.search({
+    index:aliasName,
+    
+    body: {
+      query: {
+        multi_match: {
+          query:  req.query.query,
+          fields: ['name', 'description'],
+          fuzziness: 'AUTO',
+          minimum_should_match: '50%', // Adjust this value as needed
+        },
+      },
+    },
+  });
+  const hi = result.hits.hits.map(hit => hit._source);
+  res.json(hi);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: 'An error occurred' });
+  }
 }
-module.exports ={addproduct,allproducts,updateproduct,getproduct,deleteproduct,reviewproduct,getAllReviews,deletereview,FilterProducts,SearchProduct}
+
+
+
+module.exports ={addproduct,allproducts,updateproduct,getproduct,deleteproduct,reviewproduct,getAllReviews,deletereview,FilterProducts,SearchProduct,elastic}

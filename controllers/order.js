@@ -2,7 +2,6 @@ const Order = require("../models/order");
 const Product = require('../models/product');
 const  httpResponse  = require("../helpers/helper")
 const CustomError = require("../errors");
-const Stripe= require('stripe')('sk_test_51NSl1nSBSJGldFhg6et7yBgIXwHVbEehXyILb31XnXP14eYeR4KHhYithbeReQe5PPtt7D6c9CNcnhbGVGg78WnV00tYtqcBiz')
 newOrder=async(req, res, next)=>{
     try{
       let Price=0;
@@ -151,7 +150,4 @@ try{
   }
 
 }
-payment=async(req, res, next)=>{
-  
-}
-module.exports={newOrder,getOrder,getAllOrderItems,Allorders,updateOrder,deleteOrder,payment};
+module.exports={newOrder,getOrder,getAllOrderItems,Allorders,updateOrder,deleteOrder};
