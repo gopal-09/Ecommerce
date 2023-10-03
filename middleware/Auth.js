@@ -1,5 +1,6 @@
 const jwt = require("jsonwebtoken");
 const User = require('../models/signup');
+require("dotenv").config()
 module.exports = async (req, res, next) => {
     const token = req.header('x-auth-token')
  // CHECK IF WE EVEN HAVE A TOKEN
@@ -14,7 +15,7 @@ module.exports = async (req, res, next) => {
     }
     else{
     try {
-        const decoded = await jwt.verify(token, "nfb32iur32ibfqfvi3vf932bg932g")
+        const decoded = await jwt.verify(token, process.env.Secret_key)
         //console.log(decoded);
         const a = decoded.email;
         //console.log(typeof(a));

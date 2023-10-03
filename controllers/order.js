@@ -17,7 +17,7 @@ newOrder=async(req, res, next)=>{
         paymentInfo:req.body.paymentInfo,
         totalPrice:Total,
         paidAt: Date.now(),
-        user: req.user._id,
+        user: req.user,
       });
       await order.save();
       return res
@@ -46,7 +46,7 @@ getOrder=async(req, res, next)=>{
 }
 getAllOrderItems=async(req, res, next) => {
     try{
-    const orders = await Order.find({ user: req.user._id });
+    const orders = await Order.find({ user: req.user});
     if (!orders) {
         return next(new CustomError.NotFoundError("orders not found"));}
   let ItemsOrdered= []
@@ -102,21 +102,6 @@ updateOrder=async(req,res,next) => {
        updateStock(item.id, item.quantity);
     });
   }
-  //order.orderStatus = req.body.status;
-
-  // if (req.body.status === "Delivered") {
-  //   order.deliveredAt = Date.now();
-  // }
-
-  // const changedOrder=await Order.findById(req.params.id)
-  // console.log(changedOrder);
-  // await order.save({ validateBeforeSave: false });
-  // res.header("Access-Control-Allow-Credentials",true)
-  // res.status(200).json({
-  //   success: true,
-  //   changedOrder//added extra by dino
-  // });
-  // console.log(res);
 
 
 async function updateStock(id, quantity) {

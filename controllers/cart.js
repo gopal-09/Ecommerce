@@ -2,7 +2,7 @@ const Product = require('../models/product');
 const Cart = require('../models/cart');
 const  httpResponse  = require("../helpers/helper")
 const CustomError = require("../errors");
-const { findOneAndDelete } = require('../models/order');
+//const { findOneAndDelete } = require('../models/order');
 addproduct=async(req,res,next) => {
     const {productId,quantity} = req.body
     try{
